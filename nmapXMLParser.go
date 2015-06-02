@@ -1,9 +1,9 @@
-package nmapXML
+package nmapXMLParser
 
 import (
 	"encoding/xml"
-	"strconv"
 	"errors"
+	"strconv"
 )
 
 //Missing: target,taskbegin,taskprocess,taskend,prescript,postscript,output
@@ -60,20 +60,20 @@ type Host struct {
 	Times         Times         `xml:"times"`
 }
 
-func (h *Host) IPv4() (string, error){
-	for _, ip := range h.Address{
-		if ip.AddressType == "ipv4"{
-			return ip.Address, nil	
+func (h *Host) IPv4() (string, error) {
+	for _, ip := range h.Address {
+		if ip.AddressType == "ipv4" {
+			return ip.Address, nil
 		}
 	}
-	
+
 	return "", errors.New("No ipv4 address")
 }
 
-func (h *Host) PortsOpen() (ports []int){
-	for _, p := range h.Ports.Port{
-		if p.State.State == "open"{
-			if port, err := strconv.Atoi(p.PortID); err == nil{
+func (h *Host) PortsOpen() (ports []int) {
+	for _, p := range h.Ports.Port {
+		if p.State.State == "open" {
+			if port, err := strconv.Atoi(p.PortID); err == nil {
 				ports = append(ports, port)
 			}
 		}
@@ -112,15 +112,14 @@ type Ports struct {
 	Port       []Port     `xml:"port"`
 }
 
-func (ports *Ports) State(id int) string{
-	for _, port := range ports.Port{
+func (ports *Ports) State(id int) string {
+	for _, port := range ports.Port {
 		if p, _ := strconv.Atoi(port.PortID); p == id {
 			return port.State.State
 		}
 	}
 	return "" //Not responding
 }
-
 
 type ExtraPorts struct {
 	State string `xml:"state,attr"`
@@ -277,69 +276,68 @@ type Hosts struct {
 
 // Struct for reporting
 type HostReport struct {
-	IP string
+	IP    string
 	Ports []int
 }
 
-func (n *NmapRun) IPv4() (ips []string){
-	for _, host := range n.Host{
-		for _, address := range host.Address{
-			if address.AddressType == "ipv4"{
-				ips = append(ips, address.Address)	
+func (n *NmapRun) IPv4() (ips []string) {
+	for _, host := range n.Host {
+		for _, address := range host.Address {
+			if address.AddressType == "ipv4" {
+				ips = append(ips, address.Address)
 			}
 		}
 	}
 	return ips
 }
 
-func (n *NmapRun) IPv6() (ips []string){
-	for _, host := range n.Host{
-		for _, address := range host.Address{
-			if address.AddressType == "ipv6"{
-				ips = append(ips, address.Address)	
+func (n *NmapRun) IPv6() (ips []string) {
+	for _, host := range n.Host {
+		for _, address := range host.Address {
+			if address.AddressType == "ipv6" {
+				ips = append(ips, address.Address)
 			}
 		}
 	}
 	return ips
 }
 
-
-func (n *NmapRun) HTTPS() (r []HostReport){
-	for _, host := range n.Host{
+func (n *NmapRun) HTTPS() (r []HostReport) {
+	for _, host := range n.Host {
 		var ports []int
-		for _, port := range host.Ports.Port{
-			if (port.Service.Name == "http" || port.Service.Name == "https" ) && port.Service.Tunnel == "ssl"{
-				
-				if p, err := strconv.Atoi(port.PortID); err == nil{
+		for _, port := range host.Ports.Port {
+			if (port.Service.Name == "http" || port.Service.Name == "https") && port.Service.Tunnel == "ssl" {
+
+				if p, err := strconv.Atoi(port.PortID); err == nil {
 					ports = append(ports, p)
 				}
 			}
 		}
 		if len(ports) > 0 {
 			for _, ip := range host.Address {
-				if ip.AddressType == "ipv4" || ip.AddressType == "ipv6"{
+				if ip.AddressType == "ipv4" || ip.AddressType == "ipv6" {
 					r = append(r, HostReport{IP: ip.Address, Ports: ports})
 				}
 			}
 		}
 	}
-	
+
 	return r
 }
 
-func (n *NmapRun) Port(p int) (hosts []string){
-	for _, host := range n.Host{
-		if host.Ports.State(p) == "open"{
-			if ipv4, err := host.IPv4(); err == nil{
+func (n *NmapRun) Port(p int) (hosts []string) {
+	for _, host := range n.Host {
+		if host.Ports.State(p) == "open" {
+			if ipv4, err := host.IPv4(); err == nil {
 				hosts = append(hosts, ipv4)
 			}
 		}
 	}
-	
-	return hosts	
+
+	return hosts
 }
 
-func (n *NmapRun) Parse(data []byte) error{
+func (n *NmapRun) Parse(data []byte) error {
 	err := xml.Unmarshal(data, n)
 	return err
 }
