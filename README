@@ -1,2 +1,4 @@
 Parses Nmap XML into structs.
 Might add handlers for requesting data later.
+
+Fully intend to perform more potentially breaking changes before stabilizing.
