@@ -182,6 +182,21 @@ type Times struct {
 	To     string `xml:"to,attr"`
 }
 
+//IPs return all IPs associated with that host. Both v4 and v6
+func (h *Host) IPs() (ips []net.IP, err error){
+	for _, ip := range h.Address {
+		if ip.AddressType == AddressIPv4 || ip.AddressType == AddressIPv6{
+			ips = append(ips, ip.Address)
+		}
+	}	
+	
+	if len(ips) == 0{
+		return nil, errors.New("No ip address")
+	}
+	
+	return ips, nil
+}
+
 func (h *Host) IPv4() (net.IP, error) {
 	for _, ip := range h.Address {
 		if ip.AddressType == AddressIPv4 {
